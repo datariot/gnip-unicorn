@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<!-- saved from url=(0035)http://static.splunk.io/Unicorn.htm -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>Unicorn Roulette</title>
+  <style>
+  @import url(http://fonts.googleapis.com/css?family=Lato:300,400,700|PT+Mono);
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+
+      padding: 0;
+    }
+    .container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+    }
+
+    .roulette-wheel {
+      font-family: Lato, sans-serif;
+      font: 600 normal 1.5em;
+      position: relative;
+      margin: 0 auto;
+      margin-top: -5px;
+      width: 1000px;
+    }
+
+    .wheel-stop {
+      display: inline-block;
+      position: absolute;
+      z-index: 1;
+      transition: transform 0.25s ease;
+      transition-delay: 5s;
+    }
+
+     /*TODO: randomize colors*/
+    .wheel-stop:nth-child(7n + 2) {
+      color: magenta;
+    }
+
+    .wheel-stop:nth-child(7n + 3) {
+      color: purple;
+    }
+
+    .wheel-stop:nth-child(7n + 4) {
+      color: blue;
+    }
+
+    .wheel-stop:nth-child(7n + 5) {
+      color: green;
+    }
+
+    .wheel-stop:nth-child(7n + 6) {
+      color: goldenrod;
+    }
+
+    .wheel-stop:nth-child(7n) {
+      color: orange;
+    }
+
+    .wheel-stop:nth-child(7n + 1) {
+      color: red;
+    }
+
+    .unicorn {
+      /*margin: 130px 160px;*/
+      margin: 100px 100px;
+      z-index: 2;
+      transform: rotate(0deg);
+      transform-origin: 50% 50%;
+      transition: all 5s ease;
+    }
+
+    .sidebar {
+      position: absolute;
+      top: 0;
+      right: 0;
+    }
+
+    .form-inline label,
+    .form-inline input {
+      display: inline-block;
+    }
+
+    @-webkit-keyframes lookaround {
+      from {
+        transform: rotate(0deg);
+      }
+      20% {
+        transform: rotate(90deg);
+      }
+      40% {
+        transform: rotate(0deg);
+      }
+      50% {
+        transform: rotateY(180deg);
+      }
+      70% {
+        transform: rotateY(180deg) rotate(-90deg);
+      }
+      90% {
+        transform: rotateY(180deg) rotate(0deg);
+      }
+      to {
+        transform: rotateY(0deg) rotate(0deg);
+      }
+    }
+    #finishsound {
+        width: 0px;
+        height: 0px;
+    }
+    #spinsound {
+        width: 0px;
+        height: 0px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div id="roulette-wheel" class="roulette-wheel">
+    <img id="unicorn" class="unicorn" src="./UnicornRoulette_files/unicorn.gif" width="225px" height="225px" style="position: absolute; left: 200px; top: 133px;">
+  </div>
+  <aside class="sidebar">
+    <form id="add-name-form" class="form-inline">
+      <!-- <input type="text" name="name" placeholder="Name"/> -->
+      <textarea type="text" id="name" name="name" placeholder="Name" rows="30" cols="30"></textarea>
+      <br>
+      <input type="button" id="choose-winner-btn" value="Choose Winner">
+    </form>
+  </aside>
+  <audio id="finishsound" src="magic-chime-01.mp3" controls="" preload="auto" autobuffer=""></audio>
+  <audio id="spinsound" src="pedals.mp3" controls="" preload="auto" autobuffer=""></audio>
+</div>
+<script type="text/javascript">
+  function wheelify() {
+    var i = 0;
+    var radiusPx = 345;
+    var stops = [].slice.call(document.querySelectorAll('.js-wheel-stop'));
+    var angle = 2 * Math.PI / stops.length;
+    var initialAngle = Math.PI / 2;
+    stops.forEach(function (wheelStop) {
+      wheelStop.style.left = radiusPx + (radiusPx * Math.cos(initialAngle + (i * angle))) + "px";
+      wheelStop.style.top = radiusPx + (radiusPx * Math.sin(initialAngle + (i * angle))) + "px";
+      i++;
+    });
+  }
+
+  function spin() {
+    var btn = document.getElementById('choose-winner-btn');
+    btn.setAttribute('disabled', true);
+    // reset position in case of multiple spins
+    var unicorn = document.getElementById('unicorn');
+    unicorn.style.transition = 'unset';
+    unicorn.style.transform = 'rotate(0deg)';
+    // allow browser to re-render first
+    setTimeout(function() {
+      unicorn.style.transition = 'all 5s ease';
+      var spinsound=document.getElementById("spinsound");
+      spinsound.play();
+      var wheelStops = [].slice.call(document.querySelectorAll('.js-wheel-stop'));
+      var winner = Math.floor(Math.random() * 553105243) % wheelStops.length;
+      console.log("winner = " + winner);
+      //var initialAngleDegrees = 90;
+      //var hornAngleDegrees = 150;
+      var initialAngleDegrees = 90;
+      var hornAngleDegrees = 56;
+      var fullRotations = 6;
+      var rotation = initialAngleDegrees + hornAngleDegrees + fullRotations * 360 + ((winner + 1) * 360 / wheelStops.length);
+      unicorn.style.transform = 'rotate(' + rotation + 'deg)';
+      setTimeout(function () {
+        showWinner(winner, wheelStops);
+      }, 10);
+      setTimeout(function () {
+        var rotation = initialAngleDegrees + hornAngleDegrees + fullRotations * 360 + ((winner) * 360 / wheelStops.length);
+        console.log("rotation = " + rotation);
+        unicorn.style.transition = 'all 0.25s ease-in';
+        unicorn.style.transform = 'rotate(' + rotation + 'deg)';
+
+        var finishsound=document.getElementById("finishsound");
+        spinsound.pause();
+        finishsound.play();
+        btn.removeAttribute('disabled');
+      }, 5000);
+    }, 100);
+  }
+
+  function showWinner(winner, wheelStops) {
+    var i = 0;
+    wheelStops.forEach(function (stop) {
+      if (i == winner) {
+        stop.style.transform = 'scale(5)';
+      }
+      i++;
+    });
+  }
+
+  function lookAround() {
+    var wheelStops = [].slice.call(document.querySelectorAll('.js-wheel-stop'));
+    var winner = Math.floor(Math.random() * 553105243) % wheelStops.length;
+    console.log("winner = " + winner);
+    var initialAngleDegrees = 90;
+    var hornAngleDegrees = 300;
+    var i = 0;
+    wheelStops.forEach(function (stop) {
+      if (i == winner) {
+        stop.style.transform = 'scale(5)';
+      }
+      i++;
+    });
+    document.getElementById('unicorn').style.webkitAnimationName = 'lookaround';
+    document.getElementById('unicorn').style.webkitAnimationDuration = '10s';
+    setTimeout(function pointToWinner() {
+      var rotation = initialAngleDegrees + hornAngleDegrees + ((winner) * 360 / wheelStops.length);
+      console.log("rotation = " + rotation);
+      document.getElementById('unicorn').style.transition = 'all 0.75s ease-in';
+      document.getElementById('unicorn').style.transform = 'rotate(' + rotation + 'deg)';
+    }, 10000);
+    //  TODO: get el.addEventListener("animationend", listener, false); - to work
+  }
+
+  function addNames(evt) {
+    evt.preventDefault();
+    //var nameInput = evt.target['name'];
+    var nameInput = document.getElementById('name');
+    var rouletteWheel = document.getElementById('roulette-wheel');
+    // reset names in case of multiple spins
+    var existingNames = document.querySelectorAll('.wheel-stop.js-wheel-stop');
+    [].forEach.call(existingNames, function(name) {
+      rouletteWheel.removeChild(name);
+    });
+    if (nameInput.value !== '') {
+      var names = nameInput.value.split("\n");
+      for (var i = 0; i < names.length; i++) {
+        var name = names[i];
+        if (name.trim() == '') { continue; }
+
+        var wheelStop = document.createElement('span');
+        wheelStop.className = 'wheel-stop js-wheel-stop';
+        wheelStop.innerText = name;
+        rouletteWheel.appendChild(wheelStop);
+      }
+    }
+    wheelify();
+    spin();
+    return false;
+  }
+
+  document.getElementById('choose-winner-btn').addEventListener('click', addNames);
+</script>
+
+
+</body></html>
